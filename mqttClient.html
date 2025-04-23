@@ -38,7 +38,7 @@
             timeout: 3,
             onSuccess: onConnect,
             onFailure: onFailure,
-            useSSL: false // Falls SSL benötigt wird
+            useSSL: true // Falls SSL benötigt wird
         };
         mqtt.onMessageArrived = onMessageArrived;
         mqtt.connect(options);
@@ -81,7 +81,7 @@
         <label for="host">Host:</label>
         <input type="text" id="host" placeholder="Host eingeben" value="mqtt.eclipseprojects.io">
         <label for="port">Port:</label>
-        <input type="text" id="port" placeholder="Port eingeben" value="80">
+        <input type="text" id="port" placeholder="Port eingeben" value="443">
         <button id="connectButton" onclick="MQTTconnect()">Verbinden</button>
         <button id="disconnectButton" onclick="MQTTdisconnect()" disabled>Trennen</button>
         <p id="status">Nicht verbunden</p>
