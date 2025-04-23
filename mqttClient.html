@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MQTT WebSocket Client</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <script type="text/javascript">
+    var mqtt;
+    var reconnectTimeout = 2000;
+
+    function onConnect() {
+        console.log("Verbunden");
+        document.getElementById("status").innerHTML = "Verbunden";
+        document.getElementById("connectButton").disabled = true;
+        document.getElementById("disconnectButton").disabled = false;
+        document.getElementById("sendButton").disabled = false;
+        document.getElementById("subscribeButton").disabled = false;
+    }
+
+    function onFailure(message) {
+        console.log("Verbindung fehlgeschlagen: " + message.errorMessage);
+        document.getElementById("status").innerHTML = "Verbindung fehlgeschlagen";
+        setTimeout(MQTTconnect, reconnectTimeout);
+    }
+
+    function onMessageArrived(message) {
+        var timestamp = new Date().toLocaleString();
+        console.log("Nachricht empfangen: " + message.payloadString);
+        document.getElementById("messages").innerHTML += "<p><strong>" + timestamp + "</strong> - " + message.destinationName + ": " + message.payloadString + "</p>";
+    }
+
+    function MQTTconnect() {
+        var host = document.getElementById("host").value;
+        var port = parseInt(document.getElementById("port").value);
+        console.log("Verbinden zu " + host + " " + port);
+        mqtt = new Paho.MQTT.Client(host, port, "clientjs");
+        var options = {
+            timeout: 3,
+            onSuccess: onConnect,
+            onFailure: onFailure,
+            useSSL: false // Falls SSL benötigt wird
+        };
+        mqtt.onMessageArrived = onMessageArrived;
+        mqtt.connect(options);
+    }
+
+    function MQTTdisconnect() {
+        if (mqtt) {
+            mqtt.disconnect();
+            console.log("Verbindung getrennt");
+            document.getElementById("status").innerHTML = "Verbindung getrennt";
+            document.getElementById("connectButton").disabled = false;
+            document.getElementById("disconnectButton").disabled = true;
+            document.getElementById("sendButton").disabled = true;
+            document.getElementById("subscribeButton").disabled = true;
+        }
+    }
+
+    function subscribeTopic() {
+        var topic = document.getElementById("subscribeTopic").value;
+        console.log("Abonnieren: " + topic);
+        mqtt.subscribe(topic);
+    }
+
+    function sendMessage() {
+        var topic = document.getElementById("sendTopic").value;
+        var messageContent = document.getElementById("message").value;
+        var message = new Paho.MQTT.Message(messageContent);
+        message.destinationName = topic;
+        mqtt.send(message);
+        console.log("Nachricht gesendet: " + messageContent);
+    }
+    </script>
+</head>
+<body>
+    <h1>MQTT WebSocket Client</h1>
+
+    <!-- Erster Abschnitt: Connect und Disconnect -->
+    <div class="section">
+        <h2>Verbindung</h2>
+        <label for="host">Host:</label>
+        <input type="text" id="host" placeholder="Host eingeben" value="mqtt.eclipseprojects.io">
+        <label for="port">Port:</label>
+        <input type="text" id="port" placeholder="Port eingeben" value="80">
+        <button id="connectButton" onclick="MQTTconnect()">Verbinden</button>
+        <button id="disconnectButton" onclick="MQTTdisconnect()" disabled>Trennen</button>
+        <p id="status">Nicht verbunden</p>
+    </div>
+
+    <!-- Zweiter Abschnitt: Nachricht senden -->
+    <div class="section">
+        <h2>Nachricht senden</h2>
+        <label for="sendTopic">Topic:</label>
+        <input type="text" id="sendTopic" placeholder="Topic eingeben">
+        <label for="message">Nachricht:</label>
+        <textarea id="message" placeholder="Nachricht eingeben"></textarea>
+        <button id="sendButton" onclick="sendMessage()" disabled>Senden</button>
+    </div>
+
+    <!-- Dritter Abschnitt: Topic abonnieren -->
+    <div class="section">
+        <h2>Topic abonnieren</h2>
+        <label for="subscribeTopic">Topic:</label>
+        <input type="text" id="subscribeTopic" placeholder="Topic eingeben">
+        <button id="subscribeButton" onclick="subscribeTopic()" disabled>Abonnieren</button>
+    </div>
+
+    <!-- Empfangene Nachrichten -->
+    <div id="messages">
+        <h2>Empfangene Nachrichten:</h2>
+    </div>
+</body>
+</html>
